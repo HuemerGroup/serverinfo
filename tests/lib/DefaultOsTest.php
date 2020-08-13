@@ -24,6 +24,7 @@
 namespace OCA\ServerInfo\Tests;
 
 use OCA\ServerInfo\OperatingSystems\DefaultOs;
+use OCA\ServerInfo\Resources\Disk;
 use OCA\ServerInfo\Resources\Memory;
 use PHPUnit\Framework\MockObject\MockObject;
 use Test\TestCase;
@@ -133,42 +134,39 @@ class DefaultOsTest extends TestCase {
 			->with('df -TP')
 			->willReturn(file_get_contents(__DIR__ . '/../data/df_tp'));
 
-		$disks = [
-			[
-				'device' => '/dev/mapper/homestead--vg-root',
-				'fs' => 'ext4',
-				'used' => 6354399232,
-				'available' => 48456929280,
-				'percent' => '12%',
-				'mount' => '/',
-			],
-			[
-				'device' => '/dev/mapper/homestead--vg-mysql--master',
-				'fs' => 'ext4',
-				'used' => 263385088,
-				'available' => 63388057600,
-				'percent' => '1%',
-				'mount' => '/homestead-vg/master',
-			],
-			[
-				'device' => 'vagrant',
-				'fs' => 'vboxsf',
-				'used' => 629587079168,
-				'available' => 351531044864,
-				'percent' => '65%',
-				'mount' => '/vagrant',
-			],
-			[
-				'device' => 'home_vagrant_code',
-				'fs' => 'vboxsf',
-				'used' => 629587079168,
-				'available' => 351531044864,
-				'percent' => '65%',
-				'mount' => '/home/vagrant/code',
-			],
-		];
+		$disk1 = new Disk();
+		$disk1->setDevice('/dev/mapper/homestead--vg-root');
+		$disk1->setFs('ext4');
+		$disk1->setUsed(6354399232);
+		$disk1->setAvailable(48456929280);
+		$disk1->setPercent('12%');
+		$disk1->setMount('/');
 
-		$this->assertSame($disks, $this->os->getDiskInfo());
+		$disk2 = new Disk();
+		$disk2->setDevice('/dev/mapper/homestead--vg-mysql--master');
+		$disk2->setFs('ext4');
+		$disk2->setUsed(263385088);
+		$disk2->setAvailable(63388057600);
+		$disk2->setPercent('1%');
+		$disk2->setMount('/homestead-vg/master');
+
+		$disk3 = new Disk();
+		$disk3->setDevice('vagrant');
+		$disk3->setFs('vboxsf');
+		$disk3->setUsed(629587079168);
+		$disk3->setAvailable(351531044864);
+		$disk3->setPercent('65%');
+		$disk3->setMount('/vagrant');
+
+		$disk4 = new Disk();
+		$disk4->setDevice('home_vagrant_code');
+		$disk4->setFs('vboxsf');
+		$disk4->setUsed(629587079168);
+		$disk4->setAvailable(351531044864);
+		$disk4->setPercent('65%');
+		$disk4->setMount('/home/vagrant/code');
+
+		$this->assertEquals([$disk1, $disk2, $disk3, $disk4], $this->os->getDiskInfo());
 	}
 
 	public function testGetDiskInfoNoCommandOutput(): void {
@@ -176,7 +174,7 @@ class DefaultOsTest extends TestCase {
 			->with('df -TP')
 			->willThrowException(new \RuntimeException('No output for command "df -TP"'));
 
-		$this->assertSame([], $this->os->getDiskInfo());
+		$this->assertEquals([], $this->os->getDiskInfo());
 	}
 
 	public function testGetDiskInfoInvalidCommandOutput(): void {
@@ -184,7 +182,7 @@ class DefaultOsTest extends TestCase {
 			->with('df -TP')
 			->willReturn('invalid_data');
 
-		$this->assertSame([], $this->os->getDiskInfo());
+		$this->assertEquals([], $this->os->getDiskInfo());
 	}
 
 	public function testSupported(): void {
